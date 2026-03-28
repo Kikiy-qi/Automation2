@@ -5,11 +5,12 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
-def get_latest_video_urls(channel_url, max_results=5):
+def get_latest_video_urls(channel_url, max_results=15):
     ydl_opts = {
         'extract_flat': True,
         'playlist_items': f'1-{max_results}',
-        'quiet': True
+        'quiet': True,
+        'cookiefile': 'cookies.txt'
     }
     urls = []
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -26,7 +27,8 @@ def download_video(url, output_filename):
         'outtmpl': output_filename,
         'merge_output_format': 'mp4',
         'quiet': True,
-        'no_warnings': True
+        'no_warnings': True,
+        'cookiefile': 'cookies.txt'
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
@@ -91,9 +93,10 @@ def main():
             print(f"Mencoba mengunduh: {url}")
             download_video(url, source_file)
             downloaded = True
-            print("Berhasil mengunduh video publik.")
+            print("Berhasil mengunduh video.")
             break
-        except Exception:
+        except Exception as e:
+            print(f"Gagal mengunduh: {e}")
             continue
             
     if downloaded:
@@ -101,9 +104,12 @@ def main():
         parts = split_video_into_parts(source_file, 5)
         for index, part in enumerate(parts):
             print(f"Mengunggah {part} ke YouTube...")
-            upload_to_youtube(part, index + 1)
+            try:
+                upload_to_youtube(part, index + 1)
+            except Exception as e:
+                print(f"Gagal upload ke YouTube: {e}")
     else:
-        print("Tidak ada video publik yang bisa diunduh.")
+        print("Tidak ada video yang bisa diunduh.")
 
 if __name__ == "__main__":
     main()
