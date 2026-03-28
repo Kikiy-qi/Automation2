@@ -2,58 +2,68 @@ import os
 import yt_dlp
 from moviepy.editor import VideoFileClip
 
-def download_video(url):
+def get_latest_video_url(channel_url):
+    ydl_opts = {
+        'extract_flat': True,
+        'max_downloads': 1,
+        'playlist_items': '1',
+        'quiet': True
+    }
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(channel_url, download=False)
+        if 'entries' in info and len(info['entries']) > 0:
+            return info['entries'][0]['url']
+    return None
+
+def download_video(url, output_filename):
     ydl_opts = {
         'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
-        'outtmpl': 'source_video.mp4',
+        'outtmpl': output_filename,
         'merge_output_format': 'mp4'
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
-    return 'source_video.mp4'
+    return output_filename
 
-def edit_to_shorts(input_path, output_path, start_time, end_time):
-    clip = VideoFileClip(input_path).subclip(start_time, end_time)
+def split_video_into_parts(input_path, num_parts=5):
+    clip = VideoFileClip(input_path)
+    total_duration = clip.duration
+    part_duration = total_duration / num_parts
     
-    w, h = clip.size
-    target_ratio = 9 / 16
-    target_w = h * target_ratio
+    output_files = []
     
-    x_center = w / 2
-    
-    clip_resized = clip.crop(
-        x1=x_center - target_w/2,
-        y1=0,
-        x2=x_center + target_w/2,
-        y2=h
-    )
-    
-    clip_resized.write_videofile(
-        output_path, 
-        codec='libx264', 
-        audio_codec='aac', 
-        temp_audiofile='temp-audio.m4a', 
-        remove_temp=True
-    )
-    
+    for i in range(num_parts):
+        start_time = i * part_duration
+        end_time = (i + 1) * part_duration
+        
+        part_clip = clip.subclip(start_time, end_time)
+        output_filename = f"part_{i+1}.mp4"
+        
+        part_clip.write_videofile(
+            output_filename,
+            codec='libx264',
+            audio_codec='aac',
+            temp_audiofile=f'temp-audio-{i}.m4a',
+            remove_temp=True
+        )
+        output_files.append(output_filename)
+        part_clip.close()
+        
     clip.close()
-    clip_resized.close()
-
-def upload_to_youtube(file_path):
-    print("Fungsi upload YouTube akan dijalankan di sini")
-    pass
+    return output_files
 
 def main():
-    video_url = "https://www.youtube.com/watch?v=CONTOH_ID_VIDEO"
+    channel_url = "youtube.com/@NAMA_CHANNEL_TARGET/videos"
     
-    print("Mengunduh video sumber...")
-    download_video(video_url)
+    video_url = get_latest_video_url(channel_url)
     
-    print("Memotong dan mengubah ke rasio vertikal 9:16...")
-    edit_to_shorts('source_video.mp4', 'final_shorts.mp4', 30, 80)
+    source_file = "source_video.mp4"
+    download_video(video_url, source_file)
     
-    print("Video final_shorts.mp4 siap diunggah!")
-    upload_to_youtube('final_shorts.mp4')
+    parts = split_video_into_parts(source_file, 5)
+    
+    for part in parts:
+        print(f"File siap dipublikasikan: {part}")
 
 if __name__ == "__main__":
     main()
