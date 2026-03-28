@@ -48,22 +48,25 @@ def split_video_into_parts(input_path, num_parts=5):
         )
         output_files.append(output_filename)
         part_clip.close()
-        
+            
     clip.close()
     return output_files
 
 def main():
-    channel_url = "youtube.com/@NAMA_CHANNEL_TARGET/videos"
+    channel_url = "https://www.youtube.com/@EwingHDTV/videos"
     
     video_url = get_latest_video_url(channel_url)
     
-    source_file = "source_video.mp4"
-    download_video(video_url, source_file)
-    
-    parts = split_video_into_parts(source_file, 5)
-    
-    for part in parts:
-        print(f"File siap dipublikasikan: {part}")
+    if video_url:
+        source_file = "source_video.mp4"
+        download_video(video_url, source_file)
+        
+        parts = split_video_into_parts(source_file, 5)
+        
+        for part in parts:
+            print(f"File siap dipublikasikan: {part}")
+    else:
+        print("Tidak dapat menemukan video.")
 
 if __name__ == "__main__":
     main()
