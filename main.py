@@ -23,9 +23,8 @@ def get_latest_video_urls(channel_url, max_results=15):
 
 def download_video(url, output_filename):
     ydl_opts = {
-        'format': 'bestvideo+bestaudio/best',
+        'format': 'best',
         'outtmpl': output_filename,
-        'merge_output_format': 'mp4',
         'quiet': True,
         'no_warnings': True,
         'cookiefile': 'cookies.txt'
