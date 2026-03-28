@@ -23,11 +23,16 @@ def get_latest_video_urls(channel_url, max_results=15):
 
 def download_video(url, output_filename):
     ydl_opts = {
-        'format': 'best',
+        'format': 'bestvideo+bestaudio/best',
         'outtmpl': output_filename,
+        'merge_output_format': 'mp4',
         'quiet': True,
         'no_warnings': True,
-        'cookiefile': 'cookies.txt'
+        'cookiefile': 'cookies.txt',
+        'postprocessors': [{
+            'key': 'FFmpegVideoConvertor',
+            'preferedformat': 'mp4'
+        }]
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
@@ -92,7 +97,7 @@ def main():
             print(f"Mencoba mengunduh: {url}")
             download_video(url, source_file)
             downloaded = True
-            print("Berhasil mengunduh video.")
+            print("Berhasil mengunduh video publik.")
             break
         except Exception as e:
             print(f"Gagal mengunduh: {e}")
