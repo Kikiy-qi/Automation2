@@ -1,6 +1,9 @@
 import os
 import yt_dlp
 from moviepy.editor import VideoFileClip
+from google.oauth2.credentials import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 
 def get_latest_video_urls(channel_url, max_results=5):
     ydl_opts = {
@@ -33,13 +36,11 @@ def split_video_into_parts(input_path, num_parts=5):
     clip = VideoFileClip(input_path)
     total_duration = clip.duration
     part_duration = total_duration / num_parts
-    
     output_files = []
     
     for i in range(num_parts):
         start_time = i * part_duration
         end_time = (i + 1) * part_duration
-        
         part_clip = clip.subclip(start_time, end_time)
         output_filename = f"part_{i+1}.mp4"
         
@@ -57,10 +58,31 @@ def split_video_into_parts(input_path, num_parts=5):
     clip.close()
     return output_files
 
+def upload_to_youtube(video_path, part_number):
+    credentials = Credentials.from_authorized_user_file('token.json', ['https://www.googleapis.com/auth/youtube.upload'])
+    youtube = build('youtube', 'v3', credentials=credentials)
+    
+    body = {
+        'snippet': {
+            'title': f'Ewing HD Paling Menyeramkan - Part {part_number} #shorts',
+            'description': f'Cuplikan video Ewing HD bagian {part_number}. #ewinghd #horror #shorts',
+            'tags': ['ewing hd', 'horror', 'shorts'],
+            'categoryId': '24'
+        },
+        'status': {
+            'privacyStatus': 'public',
+            'selfDeclaredMadeForKids': False
+        }
+    }
+    
+    media = MediaFileUpload(video_path, chunksize=-1, resumable=True, mimetype='video/mp4')
+    request = youtube.videos().insert(part='snippet,status', body=body, media_body=media)
+    response = request.execute()
+    print(f"Video part {part_number} berhasil diunggah! ID: {response['id']}")
+
 def main():
     channel_url = "https://www.youtube.com/@EwingHDTV/videos"
     video_urls = get_latest_video_urls(channel_url)
-    
     source_file = "source_video.mp4"
     downloaded = False
     
@@ -72,14 +94,14 @@ def main():
             print("Berhasil mengunduh video publik.")
             break
         except Exception:
-            print("Gagal mengunduh (mungkin video khusus member). Lanjut ke video berikutnya...")
             continue
             
     if downloaded:
         print("Memulai proses pemotongan menjadi 5 bagian...")
         parts = split_video_into_parts(source_file, 5)
-        for part in parts:
-            print(f"File siap: {part}")
+        for index, part in enumerate(parts):
+            print(f"Mengunggah {part} ke YouTube...")
+            upload_to_youtube(part, index + 1)
     else:
         print("Tidak ada video publik yang bisa diunduh.")
 
