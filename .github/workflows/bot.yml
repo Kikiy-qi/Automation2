@@ -26,10 +26,11 @@ jobs:
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - name: Create Credentials Files
+      - name: Create Credentials and Cookies Files
         run: |
           echo '${{ secrets.YOUTUBE_CLIENT_SECRETS_JSON }}' > client_secrets.json
           echo '${{ secrets.YOUTUBE_TOKEN_JSON }}' > token.json
+          echo '${{ secrets.YOUTUBE_COOKIES_TXT }}' > cookies.txt
 
       - name: Install Dependencies
         run: pip install -r requirements.txt
