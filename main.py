@@ -23,7 +23,7 @@ def get_latest_video_urls(channel_url, max_results=15):
 
 def download_video(url, output_filename):
     ydl_opts = {
-        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
+        'format': 'bestvideo+bestaudio/best',
         'outtmpl': output_filename,
         'merge_output_format': 'mp4',
         'quiet': True,
