@@ -13,6 +13,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
@@ -20,6 +25,11 @@ jobs:
 
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Create Credentials Files
+        run: |
+          echo '${{ secrets.YOUTUBE_CLIENT_SECRETS_JSON }}' > client_secrets.json
+          echo '${{ secrets.YOUTUBE_TOKEN_JSON }}' > token.json
 
       - name: Install Dependencies
         run: pip install -r requirements.txt
